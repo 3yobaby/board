@@ -1,0 +1,33 @@
+@CHARSET "UTF-8";
+
+table{
+	position : relative;
+	margin : 0px auto;
+	width : 800px;
+	border-collapse : collapse;
+	font-family : consolas;
+}
+
+td, th{
+	font-size : 10pt;
+	border : 1px solid #99bb22;
+	height : 30px;
+	padding : 0px 5px;	
+}
+
+th{
+	background-color : #aacc44;
+	color : #ffffff;
+	font-family : consolas;	
+}
+
+td.listNum,
+td.listReadCount{
+	text-align : right;
+}
+
+td.listName,
+td.listDate,
+td.listSubject{
+	text-align : center;
+}
