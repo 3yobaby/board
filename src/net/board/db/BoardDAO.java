@@ -49,12 +49,19 @@ public class BoardDAO {
 			}
 	}
 
-	public List<BoardBean> getBoardList() {
+	public List<BoardBean> getBoardList(int page, int limit) {
 		List<BoardBean> list = new ArrayList<BoardBean>();
-		String sql = "SELECT * FROM board ORDER BY board_num DESC";
+		String sql = "select * from ("
+				+ "	select rownum rnum, b.* from board b ORDER BY board_re_ref desc, board_re_lev asc) "
+				+ " where rnum >= ? and rnum <= ?";
+		// 1페이지 Limit 10개. 1번~ 10번
+		// 1번 = (page-1)*limit+1
+		// 10번 = page*limit
 		try {
 			con = ds.getConnection();
 			pstmt = con.prepareStatement(sql);
+			pstmt.setInt(1, (page-1)*limit+1);
+			pstmt.setInt(2, page*limit);
 			rs = pstmt.executeQuery();
 			while (rs.next()) {
 				BoardBean bean = new BoardBean();
@@ -79,7 +86,7 @@ public class BoardDAO {
 				list.add(bean);
 			}
 		} catch (SQLException e) {
-			System.out.println(e.getMessage());
+			e.printStackTrace();
 		} finally {
 			close();
 		}
@@ -116,7 +123,7 @@ public class BoardDAO {
 					+ " 	board_re_ref, board_re_lev, board_re_seq, "
 					+ " 	board_readcount, board_date) "
 					+ " VALUES (BOARD_SEQ.NEXTVAL, "
-					+ " ?,?,?,?,?,?,?,?,?, SYSDATE)";
+					+ " ?,?,?,?,?,BOARD_SEQ.NEXTVAL,?,?,?, SYSDATE)";
 			pstmt = con.prepareStatement(sql);
 			pstmt.setString(1, board.getBoard_name());
 			pstmt.setString(2, board.getBoard_pass());
@@ -126,7 +133,6 @@ public class BoardDAO {
 			pstmt.setInt(6, 0);
 			pstmt.setInt(7, 0);
 			pstmt.setInt(8, 0);
-			pstmt.setInt(9, 0);
 
 			result = pstmt.executeUpdate();
 			if (result > 0) {
@@ -229,12 +235,12 @@ public class BoardDAO {
 		return false;
 	}
 
-	public boolean deleteBoard(int num) {
+	public boolean deleteBoard(int board_num) {
 		try{
 			String sql = "Delete board where board_num=?";
 			con = ds.getConnection();
 			pstmt = con.prepareStatement(sql);
-			pstmt.setInt(1, num);
+			pstmt.setInt(1, board_num);
 			if(pstmt.execute()){
 				return true;
 			}
@@ -244,5 +250,56 @@ public class BoardDAO {
 			close();
 		}
 		return false;
+	}
+
+	public void boardReply(BoardBean board) {
+		// 글 그룹 번호 re_ref
+		int re_ref = board.getBoard_re_ref();
+		int re_lev = board.getBoard_re_lev();
+		int re_seq = board.getBoard_re_seq();
+		try{
+			String sql = "select board_seq.nextval from dual";
+			pstmt = con.prepareStatement(sql);
+			rs = pstmt.executeQuery();
+			rs.next();
+			int nextval = rs.getInt(1);
+			
+			sql = "UPDATE board "
+					+ " SET board_re_seq=board_re_seq+1 "
+					+ " WHERE board_re_ref=? and "
+					+ " board_re_seq > ?";
+			con = ds.getConnection();
+			con.setAutoCommit(false);
+			pstmt = con.prepareStatement(sql);
+			pstmt.setInt(1, re_ref);
+			pstmt.setInt(2, re_seq);
+			pstmt.executeUpdate();
+			// ref : 원글
+			// lev : 답글 레벨
+			// seq : 답글간 레벨
+			sql = "INSERT INTO board "
+					+ "(board_num,"
+					+ " board_name,board_pass,board_subject,board_content,board_file,"
+					+ " board_re_ref,board_re_lev,board_re_seq,board_readcount,board_date) "
+					+ " VALUES (?, "
+					+ " ?,?,?,?,?,?,?,?,0,sysdate)";
+			pstmt = con.prepareStatement(sql);
+			pstmt.setInt(1, nextval);
+			pstmt.setString(2, board.getBoard_name());
+			pstmt.setString(3, board.getBoard_pass());
+			pstmt.setString(4, board.getBoard_subject());
+			pstmt.setString(5, board.getBoard_content());
+			pstmt.setString(6, "");
+			pstmt.setInt(7, board.getBoard_re_ref());
+			pstmt.setInt(8, board.getBoard_re_lev() + 1);
+			pstmt.setInt(9, board.getBoard_re_seq() + 1);
+			pstmt.executeUpdate();
+			con.commit();
+			con.setAutoCommit(true);
+		}catch(Exception ex){
+			ex.printStackTrace();
+		}finally{
+			close();
+		}
 	}
 }

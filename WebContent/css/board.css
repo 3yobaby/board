@@ -29,5 +29,9 @@ td.listReadCount{
 td.listName,
 td.listDate,
 td.listSubject{
-	text-align : center;
+	
+}
+
+input[readonly='readonly']{
+	background-color : lightgray;
 }

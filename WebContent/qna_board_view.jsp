@@ -51,6 +51,7 @@
 			<a href="./">목록으로</a>
 			<a href="./BoardModifyView.bo?board_num=<%= board.getBoard_num() %>">수정하기</a>
 			<a href="./BoardDeleteView.bo?board_num=<%= board.getBoard_num() %>">삭제하기</a>
+			<a href="./BoardReplyView.bo?board_num=<%= board.getBoard_num() %>">답변하기</a>
 		</td>
 	</tr>
 </table>

@@ -14,7 +14,13 @@ public class BoardListAction implements Action{
 	public ActionForward execute(HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
 		BoardDAO dao = new BoardDAO();
-		List<BoardBean> list = dao.getBoardList(); 
+		int page = 1;
+		if(request.getParameter("page") != null){
+			page = Integer.parseInt(request.getParameter("page"));
+		}
+		int limit = 10;
+		List<BoardBean> list = dao.getBoardList(page,limit);
+		System.out.println(this + "... listsize"+list.size());
 		request.setAttribute("boardList", list);
 		int listCount = dao.getListCount();
 		request.setAttribute("listCount", listCount);
