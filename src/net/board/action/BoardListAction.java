@@ -20,7 +20,6 @@ public class BoardListAction implements Action{
 		}
 		int limit = 10;
 		List<BoardBean> list = dao.getBoardList(page,limit);
-		System.out.println(this + "... listsize"+list.size());
 		request.setAttribute("boardList", list);
 		int listCount = dao.getListCount();
 		request.setAttribute("listCount", listCount);
